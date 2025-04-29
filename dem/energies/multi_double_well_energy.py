@@ -97,7 +97,10 @@ class MultiDoubleWellEnergy(BaseEnergyFunction):
 
     def setup_train_set(self):
         if self.data_from_efm:
-            data = np.load(self.data_path_train, allow_pickle=True)
+            if self.data_path_train.endswith(".pt"):
+                data = torch.load(self.data_path_train).cpu().numpy()
+            else:
+                data = np.load(self.data_path_train, allow_pickle=True)
 
         else:
             all_data = np.load(self.data_path, allow_pickle=True)
@@ -244,15 +247,13 @@ class MultiDoubleWellEnergy(BaseEnergyFunction):
             buffer = BytesIO()
             fig.savefig(buffer, format="png", bbox_inches="tight", pad_inches=0)
             buffer.seek(0)
-
+            plt.close()
             return PIL.Image.open(buffer)
 
         except Exception as e:
             fig.canvas.draw()
+            plt.close()
             return PIL.Image.frombytes(
                 "RGB", fig.canvas.get_width_height(), fig.canvas.renderer.buffer_rgba()
             )
-            fig.canvas.draw()
-            return PIL.Image.frombytes(
-                "RGB", fig.canvas.get_width_height(), fig.canvas.tostring_rgb()
-            )
+        

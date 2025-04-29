@@ -322,11 +322,12 @@ class LennardJonesEnergy(BaseEnergyFunction):
             buffer = BytesIO()
             fig.savefig(buffer, format="png", bbox_inches="tight", pad_inches=0)
             buffer.seek(0)
-
+            plt.close()
             return PIL.Image.open(buffer)
 
         except Exception as e:
             fig.canvas.draw()
+            plt.close()
             return PIL.Image.frombytes(
                 "RGB", fig.canvas.get_width_height(), fig.canvas.renderer.buffer_rgba()
             )

@@ -26,18 +26,18 @@ def compute_distribution_distances(
     This handles jagged times as a list of tensors.
     """
     NAMES = [
-        "1-Wasserstein",
+        # "1-Wasserstein",
         "2-Wasserstein",
-        "Linear_MMD",
-        "Poly_MMD",
-        "RBF_MMD",
-        "Mean_MSE",
-        "Mean_L2",
-        "Mean_L1",
-        "Median_MSE",
-        "Median_L2",
-        "Median_L1",
-        "Eq-EMD2",
+        # "Linear_MMD",
+        # "Poly_MMD",
+        # "RBF_MMD",
+        # "Mean_MSE",
+        # "Mean_L2",
+        # "Mean_L1",
+        # "Median_MSE",
+        # "Median_L2",
+        # "Median_L1",
+        # "Eq-EMD2",
     ]
     is_jagged = isinstance(true, list)
     pred_is_jagged = isinstance(pred, list)
@@ -55,30 +55,11 @@ def compute_distribution_distances(
             b = true[t]
         else:
             b = true[:, t, :]
-        w1 = wasserstein(a, b, power=1)
+
         w2 = wasserstein(a, b, power=2)
+        dists.append((w2,))
 
-        if energy_function.is_molecule:
-            eq_emd2 = eot(
-                a.reshape(-1, energy_function.n_particles, energy_function.n_spatial_dim).cpu(),
-                b.reshape(-1, energy_function.n_particles, energy_function.n_spatial_dim).cpu(),
-            )
 
-        if not pred_is_jagged and not is_jagged:
-            mmd_linear = linear_mmd2(a, b).item()
-            mmd_poly = poly_mmd2(a, b, d=2, alpha=1.0, c=2.0).item()
-            mmd_rbf = mix_rbf_mmd2(a, b, sigma_list=[0.01, 0.1, 1, 10, 100]).item()
-        mean_dists = compute_distances(torch.mean(a, dim=0), torch.mean(b, dim=0))
-        median_dists = compute_distances(torch.median(a, dim=0)[0], torch.median(b, dim=0)[0])
-        if pred_is_jagged or is_jagged:
-            dists.append((w1, w2, *mean_dists, *median_dists))
-        else:
-            if energy_function.is_molecule:
-                dists.append(
-                    (w1, w2, mmd_linear, mmd_poly, mmd_rbf, *mean_dists, *median_dists, eq_emd2)
-                )
-            else:
-                dists.append((w1, w2, mmd_linear, mmd_poly, mmd_rbf, *mean_dists, *median_dists))
         # For multipoint datasets add timepoint specific distances
         if ts > 1:
             names.extend([f"t{t+1}/{name}" for name in filtered_names])
@@ -99,14 +80,7 @@ def compute_full_dataset_distribution_distances(
     This handles jagged times as a list of tensors.
     """
     NAMES = [
-        "1-Wasserstein",
         "2-Wasserstein",
-        "Mean_MSE",
-        "Mean_L2",
-        "Mean_L1",
-        "Median_MSE",
-        "Median_L2",
-        "Median_L1",
     ]
     is_jagged = isinstance(true, list)
     pred_is_jagged = isinstance(pred, list)
@@ -124,18 +98,8 @@ def compute_full_dataset_distribution_distances(
             b = true[t]
         else:
             b = true[:, t, :]
-        w1 = wasserstein(a, b, power=1)
         w2 = wasserstein(a, b, power=2)
-
-        mean_dists = compute_distances(torch.mean(a, dim=0), torch.mean(b, dim=0))
-        median_dists = compute_distances(torch.median(a, dim=0)[0], torch.median(b, dim=0)[0])
-        if pred_is_jagged or is_jagged:
-            dists.append((w1, w2, *mean_dists, *median_dists))
-        else:
-            if energy_function.is_molecule:
-                dists.append((w1, w2, *mean_dists, *median_dists))
-            else:
-                dists.append((w1, w2, *mean_dists, *median_dists))
+        dists.append((w2,))
         # For multipoint datasets add timepoint specific distances
         if ts > 1:
             names.extend([f"t{t+1}/{name}" for name in filtered_names])

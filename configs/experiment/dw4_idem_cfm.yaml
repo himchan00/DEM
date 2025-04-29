@@ -7,17 +7,18 @@
 # this allows you to overwrite only specified parameters
 
 defaults:
-  - override /energy: lj55
+  - override /energy: dw4
   - override /model/net: egnn
+  - override /model/noise_schedule: geometric
 
-tags: ["LJ55", "CFM", "NLL_eval"]
+tags: ["DW4", "CFM", "NLL_eval"]
 
 seed: 12345
 
 logger:
   wandb:
     tags: ${tags}
-    group: "lj55"
+    group: "dw4_efm"
 
 # You need to fill energy.data_path_train at the command line with samples generated
 # by running dem/eval.py on a checkpoint
@@ -25,11 +26,12 @@ energy:
   data_path_train: null
 
 data:
-  n_val_batches_per_epoch: 4
+  n_val_batches_per_epoch: 4 # 4 is original value
 
 trainer:
-  check_val_every_n_epoch: 1
+  check_val_every_n_epoch: 1 # 1 is original value
   max_epochs: 2000
+
 
 model:
   debug_use_train_data: true
@@ -37,23 +39,24 @@ model:
   use_ema: false
   nll_with_cfm: true
   logz_with_cfm: true
-  tol: 1e-3
+  tol: 1e-3 # 1e-3 is original value, Bur 1e-5 is reported in the paper
   use_exact_likelihood: false
   net:
-    n_particles: 55
-    n_layers: 5
+    n_particles: 4
+    n_layers: 3
     hidden_nf: 128
+    n_dimension: 2
 
   noise_schedule:
     _target_: dem.models.components.noise_schedules.GeometricNoiseSchedule
-    sigma_min: 0.5
-    sigma_max: 4
+    sigma_min: 0.00001
+    sigma_max: 3
 
   partial_prior:
     _target_: dem.energies.base_prior.MeanFreePrior
     _partial_: true
-    n_particles: 55
-    spatial_dim: 3
+    n_particles: 4
+    spatial_dim: 2
 
   optimizer:
     lr: 1e-3
@@ -69,20 +72,19 @@ model:
     max_score_norm: 20
     min_log_reward: null
 
-  diffusion_scale: 0.5 # Dummy for cfm
+  diffusion_scale: 1 # Dummy for cfm
+
+  init_from_prior: true
 
   num_init_samples: 1 # Dummy for cfm
   num_samples_to_generate_per_epoch: 1 # Dummy for cfm
   num_samples_to_sample_from_buffer: 512 # Batch size for training
   num_samples_to_save: 1000 # Number of samples used to calculate test set ess and logz. Test set nll is calculated on the entire test set
-  eval_batch_size: 16
+  eval_batch_size: 1000
 
-  init_from_prior: true
 
   nll_integration_method: dopri5
-
-  negative_time: false
-  num_negative_time_steps: 10
+  cfm_prior_std: 2. # prior std for cfm
 
 callbacks:
   model_checkpoint:
