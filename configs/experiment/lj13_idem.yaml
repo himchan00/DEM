@@ -51,7 +51,6 @@ model:
   diffusion_scale: 0.9
   num_samples_to_generate_per_epoch: 1000
   num_samples_to_sample_from_buffer: 512
-  eval_batch_size: 2000
 
   init_from_prior: true
 
@@ -59,6 +58,9 @@ model:
 
   nll_integration_method: dopri5
   num_estimator_mc_samples: 1000
+
+  eval_batch_size: 2000 # Batch size for evaluation
+  num_samples_to_save: 20000 # Number of samples to save
   
 callbacks:
   model_checkpoint:

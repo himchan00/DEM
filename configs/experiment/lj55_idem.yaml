@@ -59,15 +59,16 @@ model:
   num_init_samples: 1024
   num_samples_to_generate_per_epoch: 128
   num_samples_to_sample_from_buffer: 128
-  eval_batch_size: 2000
 
   init_from_prior: true
-  num_samples_to_save: 10000
 
   nll_integration_method: dopri5
 
   negative_time: True
   num_negative_time_steps: 10
+
+  eval_batch_size: 2000 # Batch size for evaluation
+  num_samples_to_save: 20000 # Number of samples to save
 
 callbacks:
   model_checkpoint:
