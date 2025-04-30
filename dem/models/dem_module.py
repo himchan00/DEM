@@ -583,18 +583,20 @@ class DEMLitModule(LightningModule):
 
         self.buffer.add(self.last_samples, self.last_energies)
 
+        if self.energy_function.is_molecule:
+            self._log_dist_total_var(prefix="val")
 
 
     def _log_dist_total_var(self, prefix="val"):
         if prefix == "test":
-            data_set = self.energy_function.sample_val_set(self.eval_batch_size) # Not sure why this is sample_val_set()
+            data_set = self.energy_function.sample_test_set(self.eval_batch_size) # Not sure why this is sample_val_set()
             generated_samples = self.generate_samples(
                 num_samples=self.eval_batch_size,
                 diffusion_scale=self.diffusion_scale,
                 negative_time=self.negative_time,
             )
         else:
-            data_set = self.energy_function.sample_test_set(self.eval_batch_size) # Not sure why this is sample_test_set()
+            data_set = self.energy_function.sample_val_set(self.eval_batch_size) # Not sure why this is sample_test_set()
             generated_samples = self.generate_samples(
                 num_samples=self.eval_batch_size,
                 diffusion_scale=self.diffusion_scale,
@@ -613,9 +615,9 @@ class DEMLitModule(LightningModule):
 
     def _compute_total_var(self, generated_samples, data_set):
         generated_samples_dists = (
-            self.energy_function.interatomic_dist(generated_samples).cpu().numpy().reshape(-1),
+            self.energy_function.interatomic_dist(generated_samples).detach().cpu().numpy().reshape(-1),
         )
-        data_set_dists = self.energy_function.interatomic_dist(data_set).cpu().numpy().reshape(-1)
+        data_set_dists = self.energy_function.interatomic_dist(data_set).detach().cpu().numpy().reshape(-1)
 
         H_data_set, x_data_set = np.histogram(data_set_dists, bins=200)
         H_generated_samples, _ = np.histogram(generated_samples_dists, bins=(x_data_set))
@@ -931,7 +933,12 @@ class DEMLitModule(LightningModule):
                 )
 
         final_samples = torch.cat(final_samples, dim=0)
-
+        # Save first in case of Out of Memory
+        output_dir = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
+        path = f"{output_dir}/samples_{self.num_samples_to_save}.pt"
+        torch.save(final_samples, path)
+        print(f"Saving samples to {path}")
+        
         print("Computing large batch distribution distances")
         idx = torch.randperm(len(final_samples))[:10000]
         names, dists = compute_full_dataset_distribution_distances(
@@ -947,11 +954,6 @@ class DEMLitModule(LightningModule):
         )
 
         self.log_dict(d, sync_dist=True)
-
-        output_dir = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
-        path = f"{output_dir}/samples_{self.num_samples_to_save}.pt"
-        torch.save(final_samples, path)
-        print(f"Saving samples to {path}")
         import os
 
         os.makedirs(self.energy_function.name, exist_ok=True)

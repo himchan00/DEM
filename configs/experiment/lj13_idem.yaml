@@ -51,6 +51,7 @@ model:
   diffusion_scale: 0.9
   num_samples_to_generate_per_epoch: 1000
   num_samples_to_sample_from_buffer: 512
+  eval_batch_size: 2000
 
   init_from_prior: true
 
@@ -58,3 +59,8 @@ model:
 
   nll_integration_method: dopri5
   num_estimator_mc_samples: 1000
+  
+callbacks:
+  model_checkpoint:
+    monitor: "val/dist_total_var"
+    save_top_k: -1

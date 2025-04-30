@@ -20,7 +20,7 @@ defaults:
   - override /model/net: egnn
 
 data:
-  n_val_batches_per_epoch: 4
+  n_val_batches_per_epoch: 1
 
 trainer:
   check_val_every_n_epoch: 5
@@ -59,7 +59,7 @@ model:
   num_init_samples: 1024
   num_samples_to_generate_per_epoch: 128
   num_samples_to_sample_from_buffer: 128
-  eval_batch_size: 128
+  eval_batch_size: 2000
 
   init_from_prior: true
   num_samples_to_save: 10000
@@ -71,5 +71,5 @@ model:
 
 callbacks:
   model_checkpoint:
-    monitor: "val/2-Wasserstein"
+    monitor: "val/dist_total_var"
     save_top_k: -1
