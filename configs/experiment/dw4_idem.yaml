@@ -57,9 +57,14 @@ model:
 
   init_from_prior: true
 
-  eval_batch_size: 1000
+  eval_batch_size: 2000
 
   num_estimator_mc_samples: 1000
 
   nll_integration_method: dopri5
   cfm_prior_std: 2.
+
+callbacks:
+  model_checkpoint:
+    monitor: "val/dist_total_var"
+    save_top_k: -1
