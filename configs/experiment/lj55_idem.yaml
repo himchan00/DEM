@@ -24,7 +24,7 @@ data:
 
 trainer:
   check_val_every_n_epoch: 5
-  max_epochs: 2000
+  max_epochs: 300 # Best model was found at 10 epochs
 
 model:
   net:
